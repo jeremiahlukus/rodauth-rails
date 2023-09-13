@@ -82,9 +82,9 @@ module Rodauth
         end
 
         def directory
-          if controller.abstract?
-            fail Error, "no controller configured for configuration: #{configuration_name.inspect}"
-          end
+          # if controller.abstract?
+          #   fail Error, "no controller configured for configuration: #{configuration_name.inspect}"
+          # end
 
           controller.controller_path
         end
@@ -120,7 +120,6 @@ module Rodauth
         end
 
         def tailwind?
-          ::Rails.application.config.generators.options[:rails][:template_engine] == :tailwindcss ||
             options[:css]&.downcase&.start_with?("tailwind")
         end
       end
