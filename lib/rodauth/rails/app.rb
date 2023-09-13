@@ -51,7 +51,7 @@ module Rodauth
       end
 
       def rails_routes
-        ::Rails.application.routes.url_helpers
+        ::Jets.application.routes.routes
       end
 
       def rails_cookies

@@ -66,11 +66,7 @@ module Rodauth
         end
 
         def create_fixtures
-          generator_options = ::Rails.application.config.generators.options
-          if generator_options[:test_unit][:fixture] && generator_options[:test_unit][:fixture_replacement].nil?
-            test_dir = generator_options[:rails][:test_framework] == :rspec ? "spec" : "test"
-            template "test/fixtures/accounts.yml", "#{test_dir}/fixtures/#{table_prefix.pluralize}.yml"
-          end
+            template "test/fixtures/accounts.yml", "spec/fixtures/#{table_prefix.pluralize}.yml"
         end
 
         def show_instructions
@@ -117,13 +113,15 @@ module Rodauth
         def sequel_adapter
           SEQUEL_ADAPTERS[activerecord_adapter] || activerecord_adapter
         end
+    database_yml="#{Jets.root}/config/database.yml"
+          require "active_record/database_configurations" # lazy require
+          text = Jets::Erb.result(database_yml)
+          db_configs = Jets::Util::Yamler.load(text)
+          configurations = ActiveRecord::DatabaseConfigurations.new(db_configs)
+          Jets.config.database = configurations
 
         def activerecord_adapter
-          if ActiveRecord::Base.respond_to?(:connection_db_config)
-            ActiveRecord::Base.connection_db_config.adapter
-          else
-            ActiveRecord::Base.connection_config.fetch(:adapter)
-          end
+            Jets.config.database.configurations.last.configuration_hash[:adapter]
         end
       end
     end

@@ -1,6 +1,7 @@
 require "rails/generators/base"
 require "rails/generators/active_record/migration"
 require "erb"
+require "active_record/railtie"
 
 module Rodauth
   module Rails
@@ -111,23 +112,18 @@ module Rodauth
 
           MIGRATION_DIR = "#{__dir__}/migration/active_record"
 
+          database_yml="#{Jets.root}/config/database.yml"
+          require "active_record/database_configurations" # lazy require
+          text = Jets::Erb.result(database_yml)
+          db_configs = Jets::Util::Yamler.load(text)
+          configurations = ActiveRecord::DatabaseConfigurations.new(db_configs)
+          Jets.config.database = configurations
           def activerecord_adapter
-            if ActiveRecord::Base.respond_to?(:connection_db_config)
-              ActiveRecord::Base.connection_db_config.adapter
-            else
-              ActiveRecord::Base.connection_config.fetch(:adapter)
-            end
+            Jets.config.database.configurations.last.configuration_hash[:adapter]
           end
 
           def primary_key_type(key = :id)
-            generators  = ::Rails.application.config.generators
-            column_type = generators.options[:active_record][:primary_key_type]
-
-            if key
-              ", #{key}: :#{column_type}" if column_type
-            else
-              column_type || default_primary_key_type
-            end
+            default_primary_key_type
           end
 
           def default_primary_key_type
@@ -148,6 +144,7 @@ module Rodauth
             end
           end
         else # Sequel
+          fail Rodauth::Rails::Error, "missing Sequel database connection"
           include ::Rails::Generators::Migration
 
           MIGRATION_DIR = "#{__dir__}/migration/sequel"
